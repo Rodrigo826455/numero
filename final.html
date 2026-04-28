@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Batalha Numérica - Painel Multijogador</title>
+    <style>
+        :root { --neon-green: #00ff95; --dark-bg: #0a0a0a; --panel-bg: #161616; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--dark-bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Setup */
+        .setup-card { background: var(--panel-bg); padding: 30px; border-radius: 8px; border: 1px solid #333; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        input { background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 4px; margin: 5px; text-align: center; }
+        button { background: var(--neon-green); color: #000; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+
+        /* Game Layout */
+        #game-area { display: none; width: 100%; max-width: 1200px; }
+        .controls { text-align: center; margin-bottom: 30px; background: var(--panel-bg); padding: 20px; border-radius: 8px; border-bottom: 3px solid var(--neon-green); }
+        
+        .columns-container { display: flex; gap: 15px; justify-content: center; align-items: flex-start; overflow-x: auto; padding-bottom: 20px; }
+        .player-column { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; min-width: 200px; flex: 1; display: flex; flex-direction: column; }
+        .player-column.active-turn { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(0,255,149,0.2); }
+        .column-header { background: #222; padding: 10px; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
+        .active-turn .column-header { color: var(--neon-green); }
+
+        /* Logs */
+        .log-list { padding: 10px; font-family: 'Courier New', monospace; font-size: 0.9rem; }
+        .log-item { padding: 5px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .bomba { color: #ff4d4d; } .tiro { color: #ffcc00; }
+    </style>
+</head>
+<body>
+
+    <div id="setup" class="setup-card">
+        <h2 style="color: var(--neon-green)">CONFIGURAÇÃO DO JUIZ</h2>
+        <p>Quantos jogadores vão participar?</p>
+        <input type="number" id="numJogadores" min="2" max="6" value="2">
+        <button onclick="gerarCamposSegredo()">DEFINIR NÚMEROS</button>
+        
+        <div id="campos-segredos" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="game-area">
+        <div class="controls">
+            <h2 id="msg-turno">Vez do Jogador 1</h2>
+            <input type="text" id="chute-input" placeholder="4 dígitos" maxlength="4" style="font-size: 1.5rem; width: 120px;">
+            <button onclick="realizarChute()" style="font-size: 1.2rem;">ATIRAR!</button>
+        </div>
+
+        <div id="colunas" class="columns-container">
+            </div>
+    </div>
+
+<script>
+    let totalJogadores = 0;
+    let segredos = [];
+    let turnoAtual = 0;
+
+    function gerarCamposSegredo() {
+        totalJogadores = parseInt(document.getElementById('numJogadores').value);
+        const container = document.getElementById('campos-segredos');
+        container.innerHTML = '<h3>Digite os números secretos (4 dígitos):</h3>';
+
+        for (let i = 1; i <= totalJogadores; i++) {
+            container.innerHTML += `<input type="password" id="s${i}" placeholder="Jogador ${i}" maxlength="4" style="width: 80px;">`;
+        }
+        container.innerHTML += `<br><br><button onclick="iniciarPartida()">COMEÇAR JOGO</button>`;
+    }
+
+    function iniciarPartida() {
+        segredos = [];
+        for (let i = 1; i <= totalJogadores; i++) {
+            let val = document.getElementById(`s${i}`).value;
+            if (val.length !== 4) return alert(`Defina o número do Jogador ${i}`);
+            segredos.push(val.split(''));
+        }
+
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+
+        const colunasContainer = document.getElementById('colunas');
+        for (let i = 0; i < totalJogadores; i++) {
+            colunasContainer.innerHTML += `
+                <div class="player-column" id="col-p${i}">
+                    <div class="column-header">JOGADOR ${i+1}</div>
+                    <div class="log-list" id="log-p${i}"></div>
+                </div>
+            `;
+        }
+        atualizarDestaqueTurno();
+    }
+
+    function realizarChute() {
+        const input = document.getElementById('chute-input');
+        const chute = input.value;
+        if (chute.length !== 4) return;
+
+        const alvo = segredos[turnoAtual];
+        let bombas = 0, tiros = 0;
+        let chuteArray = chute.split('');
+
+        for (let i = 0; i < 4; i++) {
+            if (chuteArray[i] === alvo[i]) { bombas++; }
+            else if (alvo.includes(chuteArray[i])) { tiros++; }
+        }
+
+        // Adicionar na coluna correta
+        const log = document.getElementById(`log-p${turnoAtual}`);
+        log.innerHTML = `<div class="log-item">
+            <span>${chute}</span>
+            <span><b class="bomba">B:${bombas}</b> <b class="tiro">T:${tiros}</b></span>
+        </div>` + log.innerHTML;
+
+        if (bombas === 4) {
+            alert(`FIM DE JOGO! O Jogador ${turnoAtual + 1} venceu!`);
+            location.reload();
+        } else {
+            turnoAtual = (turnoAtual + 1) % totalJogadores;
+            atualizarDestaqueTurno();
+        }
+
+        input.value = '';
+        input.focus();
+    }
+
+    function atualizarDestaqueTurno() {
+        document.querySelectorAll('.player-column').forEach((col, idx) => {
+            col.classList.toggle('active-turn', idx === turnoAtual);
+        });
+        document.getElementById('msg-turno').innerText = `Vez do Jogador ${turnoAtual + 1}`;
+        document.getElementById('msg-turno').style.color = turnoAtual % 2 === 0 ? "#00ff95" : "#5bc0de";
+    }
+</script>
+</body>
+</html>
