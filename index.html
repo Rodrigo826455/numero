@@ -2,48 +2,143 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Batalha Numérica - Painel Multijogador</title>
     <style>
-        :root { --neon-green: #00ff95; --dark-bg: #0a0a0a; --panel-bg: #161616; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--dark-bg); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { 
+            --neon-green: #00ff95; 
+            --dark-bg: #0a0a0a; 
+            --panel-bg: #161616; 
+            --text: #e0e0e0;
+        }
         
-        /* Setup */
-        .setup-card { background: var(--panel-bg); padding: 30px; border-radius: 8px; border: 1px solid #333; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
-        input { background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 4px; margin: 5px; text-align: center; }
-        button { background: var(--neon-green); color: #000; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--dark-bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
 
-        /* Game Layout */
-        #game-area { display: none; width: 100%; max-width: 1200px; }
-        .controls { text-align: center; margin-bottom: 30px; background: var(--panel-bg); padding: 20px; border-radius: 8px; border-bottom: 3px solid var(--neon-green); }
+        /* Configuração Inicial */
+        .card { 
+            background: var(--panel-bg); 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            max-width: 400px;
+            width: 90%;
+            margin-top: 20px;
+        }
         
-        .columns-container { display: flex; gap: 15px; justify-content: center; align-items: flex-start; overflow-x: auto; padding-bottom: 20px; }
-        .player-column { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; min-width: 200px; flex: 1; display: flex; flex-direction: column; }
-        .player-column.active-turn { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(0,255,149,0.2); }
-        .column-header { background: #222; padding: 10px; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
+        input { 
+            background: #222; 
+            border: 1px solid #444; 
+            color: #fff; 
+            padding: 12px; 
+            border-radius: 4px; 
+            margin: 5px; 
+            text-align: center; 
+            font-size: 1rem;
+        }
+        
+        button { 
+            background: var(--neon-green); 
+            color: #000; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            text-transform: uppercase;
+        }
+
+        /* Área do Jogo */
+        #game-area { display: none; width: 100%; }
+        
+        .controls { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            background: var(--panel-bg); 
+            padding: 15px; 
+            border-radius: 8px; 
+            border-bottom: 3px solid var(--neon-green);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .columns-container { 
+            display: flex; 
+            gap: 10px; 
+            justify-content: flex-start; 
+            align-items: flex-start; 
+            overflow-x: auto; 
+            padding-bottom: 20px; 
+            width: 100%;
+        }
+
+        .player-column { 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            border-radius: 6px; 
+            min-width: 160px; 
+            flex: 1; 
+        }
+
+        .active-turn { 
+            border: 2px solid var(--neon-green); 
+            background: #1e1e1e;
+        }
+
+        .column-header { 
+            background: #222; 
+            padding: 8px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 0.9rem;
+        }
+
         .active-turn .column-header { color: var(--neon-green); }
 
-        /* Logs */
-        .log-list { padding: 10px; font-family: 'Courier New', monospace; font-size: 0.9rem; }
-        .log-item { padding: 5px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
-        .bomba { color: #ff4d4d; } .tiro { color: #ffcc00; }
+        .log-list { padding: 10px; font-family: monospace; font-size: 0.85rem; }
+        .log-item { 
+            padding: 5px 0; 
+            border-bottom: 1px solid #222; 
+            display: flex; 
+            justify-content: space-between; 
+        }
+
+        .bomba { color: #ff4d4d; } 
+        .tiro { color: #ffcc00; }
     </style>
 </head>
 <body>
 
-    <div id="setup" class="setup-card">
-        <h2 style="color: var(--neon-green)">CONFIGURAÇÃO DO JUIZ</h2>
-        <p>Quantos jogadores vão participar?</p>
-        <input type="number" id="numJogadores" min="2" max="6" value="2">
-        <button onclick="gerarCamposSegredo()">DEFINIR NÚMEROS</button>
+    <div id="setup" class="card">
+        <h2 style="color: var(--neon-green); margin-top:0;">PAINEL DO JUIZ</h2>
+        <p>Número de Jogadores:</p>
+        <input type="number" id="numJogadores" inputmode="numeric" value="2" min="2" max="6" style="width: 60px;">
+        <button onclick="gerarCamposSegredo()">Próximo</button>
         
-        <div id="campos-segredos" style="margin-top: 20px;"></div>
+        <div id="campos-segredos" style="margin-top: 15px;"></div>
     </div>
 
     <div id="game-area">
         <div class="controls">
-            <h2 id="msg-turno">Vez do Jogador 1</h2>
-            <input type="text" id="chute-input" placeholder="4 dígitos" maxlength="4" style="font-size: 1.5rem; width: 120px;">
-            <button onclick="realizarChute()" style="font-size: 1.2rem;">ATIRAR!</button>
+            <div id="msg-turno" style="font-weight:bold; margin-bottom:10px; font-size: 1.2rem;">Vez do Jogador 1</div>
+            <input type="text" id="chute-input" 
+                   inputmode="numeric" 
+                   pattern="[0-9]*" 
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
+                   placeholder="0000" maxlength="4" 
+                   style="width: 100px; font-size: 1.5rem;">
+            <button onclick="realizarChute()" style="font-size: 1rem;">ATIRAR</button>
         </div>
 
         <div id="colunas" class="columns-container">
@@ -58,35 +153,40 @@
     function gerarCamposSegredo() {
         totalJogadores = parseInt(document.getElementById('numJogadores').value);
         const container = document.getElementById('campos-segredos');
-        container.innerHTML = '<h3>Digite os números secretos (4 dígitos):</h3>';
+        container.innerHTML = '<p>Defina o número secreto de cada um:</p>';
 
         for (let i = 1; i <= totalJogadores; i++) {
-            container.innerHTML += `<input type="password" id="s${i}" placeholder="Jogador ${i}" maxlength="4" style="width: 80px;">`;
+            container.innerHTML += `
+                <input type="password" id="s${i}" 
+                       inputmode="numeric" 
+                       pattern="[0-9]*" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
+                       placeholder="J${i}" maxlength="4" 
+                       style="width: 70px;">`;
         }
-        container.innerHTML += `<br><br><button onclick="iniciarPartida()">COMEÇAR JOGO</button>`;
+        container.innerHTML += `<br><br><button onclick="iniciarPartida()">INICIAR PARTIDA</button>`;
     }
 
     function iniciarPartida() {
         segredos = [];
         for (let i = 1; i <= totalJogadores; i++) {
             let val = document.getElementById(`s${i}`).value;
-            if (val.length !== 4) return alert(`Defina o número do Jogador ${i}`);
+            if (val.length !== 4) return alert(`O Jogador ${i} precisa de exatamente 4 números!`);
             segredos.push(val.split(''));
         }
 
         document.getElementById('setup').style.display = 'none';
         document.getElementById('game-area').style.display = 'block';
 
-        const colunasContainer = document.getElementById('colunas');
+        const colContainer = document.getElementById('colunas');
         for (let i = 0; i < totalJogadores; i++) {
-            colunasContainer.innerHTML += `
+            colContainer.innerHTML += `
                 <div class="player-column" id="col-p${i}">
                     <div class="column-header">JOGADOR ${i+1}</div>
                     <div class="log-list" id="log-p${i}"></div>
-                </div>
-            `;
+                </div>`;
         }
-        atualizarDestaqueTurno();
+        atualizarInterface();
     }
 
     function realizarChute() {
@@ -98,36 +198,43 @@
         let bombas = 0, tiros = 0;
         let chuteArray = chute.split('');
 
+        // Lógica de Bombas e Tiros
         for (let i = 0; i < 4; i++) {
-            if (chuteArray[i] === alvo[i]) { bombas++; }
-            else if (alvo.includes(chuteArray[i])) { tiros++; }
+            if (chuteArray[i] === alvo[i]) {
+                bombas++;
+            } else if (alvo.includes(chuteArray[i])) {
+                tiros++;
+            }
         }
 
-        // Adicionar na coluna correta
+        // Registrar na coluna do jogador atual
         const log = document.getElementById(`log-p${turnoAtual}`);
-        log.innerHTML = `<div class="log-item">
-            <span>${chute}</span>
-            <span><b class="bomba">B:${bombas}</b> <b class="tiro">T:${tiros}</b></span>
-        </div>` + log.innerHTML;
+        log.innerHTML = `
+            <div class="log-item">
+                <span>${chute}</span>
+                <span><b class="bomba">B:${bombas}</b> <b class="tiro">T:${tiros}</b></span>
+            </div>` + log.innerHTML;
 
         if (bombas === 4) {
-            alert(`FIM DE JOGO! O Jogador ${turnoAtual + 1} venceu!`);
+            alert(`MISSÃO CUMPRIDA! O Jogador ${turnoAtual + 1} destruiu o alvo!`);
             location.reload();
         } else {
+            // Passa o turno
             turnoAtual = (turnoAtual + 1) % totalJogadores;
-            atualizarDestaqueTurno();
+            atualizarInterface();
         }
 
         input.value = '';
         input.focus();
     }
 
-    function atualizarDestaqueTurno() {
+    function atualizarInterface() {
         document.querySelectorAll('.player-column').forEach((col, idx) => {
             col.classList.toggle('active-turn', idx === turnoAtual);
         });
         document.getElementById('msg-turno').innerText = `Vez do Jogador ${turnoAtual + 1}`;
-        document.getElementById('msg-turno').style.color = turnoAtual % 2 === 0 ? "#00ff95" : "#5bc0de";
+        // Scroll para o topo para garantir que o input esteja visível no mobile
+        window.scrollTo(0, 0);
     }
 </script>
 </body>
